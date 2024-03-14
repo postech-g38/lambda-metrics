@@ -1,0 +1,103 @@
+name: Deploy AWS Lambda
+
+on:
+  workflow_call:
+    inputs:
+      lambda-name:
+        required: true
+        type: string
+      python-version:
+        required: false
+        type: string
+        default: '3.11'
+      max-concurerncy:
+        required: false
+        type: number
+        default: 10
+
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+
+
+jobs:
+  aws-lambda-deploy-zip:
+    name: Lambda Create Update
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ inputs.python-version }}
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: 'us-east-1'
+
+      - name: Zip Code
+        run: |
+          zip -r deployment-package.zip src/ -x ".git/*" ".github/*" "requirements/*" "tests/*" ".gitignore" ".idea/*" ".*"
+
+      - name: Install Dependencies
+        run: |
+          mkdir -p ./python
+          if [ -f requirements/common.txt ]; \
+            then pip install \
+              --upgrade pip \
+              --no-cache-dir \
+              --requirement requirements/common.txt \
+              --target ./python; \
+          fi
+
+      - name: Zip Dependencies
+        run: zip -r ./dependencies-package.zip ./python
+
+      - name: Create Lambda Layer
+        id: lambda-layer
+        run: |
+          echo "arn=$(aws lambda publish-layer-version \
+            --layer-name ${{ format('{0}-layer', inputs.lambda-name) }} \
+            --zip-file fileb://dependencies-package.zip \
+            --query 'LayerVersionArn' \
+          )" >> $GITHUB_OUTPUT
+
+      - name: Update Lambda Code
+        run: |
+          aws lambda update-function-code \
+            --function-name ${{ inputs.lambda-name }} \
+            --zip-file fileb://deployment-package.zip
+
+      - name: Lambda Deploy Status
+        run: |
+          echo "Verifying Lambda Deploy Status"
+          ready=0
+          while [[ $ready = 0 ]]
+          do
+            echo "Requesting Lambda Info"
+            sleep 5
+            state=$(aws lambda get-function --function-name ${{ inputs.lambda-name }} --query 'Configuration.State')
+            status=$(aws lambda get-function --function-name ${{ inputs.lambda-name }} --query 'Configuration.LastUpdateStatus')
+  
+            if [ $state == '"Active"' ]  &&  [ $status == '"Successful"' ]; then
+                echo "Update Complete"
+                ready=1
+            fi
+          done
+
+      - name: Update Lambda Max Concurency
+        if: inputs.max-concurerncy > 0
+        run: |
+          aws lambda put-function-concurrency \
+            --function-name {{ inputs.lambda-name }}
+            --reserved-concurrent-executions {{ inputs.max-concurrency }}
