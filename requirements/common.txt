@@ -1,1 +1,2 @@
 aws-lambda-powertools==2.35.1
+jmespath==1.0.1
