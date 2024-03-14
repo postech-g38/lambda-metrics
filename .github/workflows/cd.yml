@@ -1,7 +1,7 @@
 name: Deploy AWS Lambda
 
 on:
-  workflow_call:
+  workflow_dispatch:
     inputs:
       lambda-name:
         required: true
@@ -14,13 +14,6 @@ on:
         required: false
         type: number
         default: 10
-
-    secrets:
-      AWS_ACCESS_KEY_ID:
-        required: true
-      AWS_SECRET_ACCESS_KEY:
-        required: true
-
 
 jobs:
   aws-lambda-deploy-zip:
