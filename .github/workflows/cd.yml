@@ -88,10 +88,3 @@ jobs:
                 ready=1
             fi
           done
-
-      - name: Update Lambda Max Concurency
-        if: inputs.max-concurerncy > 0
-        run: |
-          aws lambda put-function-concurrency \
-            --function-name {{ inputs.lambda-name }}
-            --reserved-concurrent-executions {{ inputs.max-concurrency }}
