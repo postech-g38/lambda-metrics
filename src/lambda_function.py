@@ -6,6 +6,5 @@ from src.helpers.lambda_event import CognitoEvent
 
 
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
-    cognito = CognitoEvent(**event)
-    print(cognito)
+    print(f"PoolID: {event['userPoolId']} | ClientID: {event['callerContext']['clientId']} | UserName: {event['userName'][:15]}")
     return event
