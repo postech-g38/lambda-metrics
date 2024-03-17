@@ -1,2 +1,4 @@
 aws-lambda-powertools==2.35.1
 jmespath==1.0.1
+boto3==1.34.64
+botocore==1.34.64
