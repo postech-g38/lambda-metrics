@@ -10,10 +10,11 @@ from tests.manual.cognito.auth import BOTO_COGNITO_INIT_AUTH
 def test_lambda_handler():
     # arrange
     # cognito = botocore.session.get_session().create_client('cognito-idp', 'us-west-2')
-    # event = {
-    #     'username': '',
-    #     'password': ''
-    # }
+    event = {
+        'username': '800.624.210-00',
+        'password': 'Senha@123'
+    }
+
     # with Stubber(cognito) as stubber:
     #     stubber.add_response('initiate_auth', BOTO_COGNITO_INIT_AUTH)
     #     # act
