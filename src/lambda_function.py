@@ -9,9 +9,9 @@ client = boto3.client('cognito-idp', region_name='us-west-2')
 
 
 def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, Any]:
-
-    username = event['username']
-    password = event['password']
+    body = json.loads(event['body'])
+    username = body['username']
+    password = body['password']
 
     response = client.initiate_auth(
         ClientId=os.getenv('COGNITO_POOL_CLIENT_ID'),
