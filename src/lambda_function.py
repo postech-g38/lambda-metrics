@@ -1,4 +1,5 @@
 from typing import Dict, Any
+import json
 import os
 
 from aws_lambda_powertools.utilities.typing.lambda_context import LambdaContext
@@ -30,10 +31,10 @@ def lambda_handler(event: Dict[str, Any], context: LambdaContext) -> Dict[str, A
     expires_in = response['AuthenticationResult']['ExpiresIn']
 
     return {
-        'statusCode': 200,
-        'body': {
+        'statusCode': 201,
+        'body': json.dumps({
             'access_token': access_token,
             'refresh_token': refresh_token,
             'expires_in': expires_in
-        }
+        })
     }
